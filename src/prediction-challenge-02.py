@@ -37,9 +37,9 @@ print(validation_y.shape)
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6,5)
+        self.conv1 = nn.Conv2d(3, 10,5)
         self.pool=nn.MaxPool2d(2,2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.conv2 = nn.Conv2d(10, 16, 5)
         self.fc1 = nn.Linear(16*5*5,120)
         self.fc2 = nn.Linear(120,84)
         self.fc3 = nn.Linear(84,10)
@@ -61,7 +61,7 @@ def train(epoch):
         inputs,labels=minibatch
         optimizer.zero_grad()   # zero the gradient buffers
         outputs = net(inputs)
-        loss = F.nll_loss(outputs, labels)
+        loss = F.cross_entropy(outputs, labels)
         loss.backward()
         optimizer.step()
 
@@ -104,10 +104,10 @@ validationset=torch.utils.data.TensorDataset(torch.from_numpy(validation_x).floa
 validationloader=torch.utils.data.DataLoader(validationset,batch_size=50,shuffle=False)
 
 net=Net()
-optimizer = torch.optim.SGD(net.parameters(), lr=0.01)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
 
-for i in range(10):
+for i in range(20):
      train(i)
      test()
 
