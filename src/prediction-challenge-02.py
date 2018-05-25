@@ -37,20 +37,22 @@ print(validation_y.shape)
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
+        self.conv1 = nn.Conv2d(3, 6,5)
+        self.pool=nn.MaxPool2d(2,2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16*5*5,120)
+        self.fc2 = nn.Linear(120,84)
+        self.fc3 = nn.Linear(84,10)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16*5*5)
         x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        x=F.log_softmax(x,1)
+        return x
 
 def train(epoch):
     print ("training epoch: ", epoch)
@@ -59,7 +61,7 @@ def train(epoch):
         inputs,labels=minibatch
         optimizer.zero_grad()   # zero the gradient buffers
         outputs = net(inputs)
-        loss = criterion(outputs, labels)
+        loss = F.nll_loss(outputs, labels)
         loss.backward()
         optimizer.step()
 
@@ -95,13 +97,12 @@ args = parser.parse_args()
 use_cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
-trainset = torch.utils.data.TensorDataset(torch.from_numpy(training_x),torch.from_numpy(training_y))
+trainset = torch.utils.data.TensorDataset(torch.from_numpy(training_x).float(),torch.from_numpy(training_y))
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=50, shuffle=True)
 
-validationset=torch.utils.data.TensorDataset(torch.from_numpy(validation_x),torch.from_numpy(validation_y))
+validationset=torch.utils.data.TensorDataset(torch.from_numpy(validation_x).float(),torch.from_numpy(validation_y))
 validationloader=torch.utils.data.DataLoader(validationset,batch_size=50,shuffle=False)
 
-criterion = nn.MSELoss()
 net=Net()
 optimizer = torch.optim.SGD(net.parameters(), lr=0.01)
 
