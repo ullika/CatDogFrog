@@ -98,16 +98,17 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 trainset = torch.utils.data.TensorDataset(torch.from_numpy(training_x).float(),torch.from_numpy(training_y))
+transform=torchvision.transforms.Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=50, shuffle=True)
-
 validationset=torch.utils.data.TensorDataset(torch.from_numpy(validation_x).float(),torch.from_numpy(validation_y))
 validationloader=torch.utils.data.DataLoader(validationset,batch_size=50,shuffle=False)
 
 net=Net()
-optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.7)
 
+# best parameters: lr=0.01 momentum 0.8, lr=0.05,momentum=0,7
 
-for i in range(20):
+for i in range(50):
      train(i)
      test()
 
